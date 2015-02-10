@@ -28,7 +28,7 @@ public class Robot extends IterativeRobot {
 	DigitalInput fiveTotesIn;
 	DigitalInput liftUpperLimit;
 	DigitalInput liftLowerLimit;
-	boolean twoInUp;
+	boolean fiveUpToggle;
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -73,7 +73,7 @@ public class Robot extends IterativeRobot {
     	liftEncoder.reset();
     	liftUp = false;
     	liftDown = false;
-    	twoInUp = false;
+    	fiveUpToggle = false;
     }
 
     /**
@@ -85,12 +85,15 @@ public class Robot extends IterativeRobot {
     	if(stick.getRawButton(12) || stick.getRawButton(11)){ // human override
     		liftUp = false;
         	liftDown = false;
-        	twoInUp = false;
+        	fiveUpToggle = false;
+        	
     		if(stick.getRawButton(6) && liftEncoder.getDistance() < 800 && liftUpperLimit.get()){
     			lift.set(-0.5);
+    			
     		}else if(stick.getRawButton(4) && liftEncoder.getDistance() > 5 && liftLowerLimit.get()){
     			lift.set(0.5);
-    		}else if(stick.getRawButton(11)){// go to co-op set point 70
+    			
+    		}else if(stick.getRawButton(11)){// go to co-op set point
     			if(liftEncoder.getDistance() > 200){ 
     				lift.set(0.5);
     			}else if(liftEncoder.getDistance() < 140){
@@ -101,46 +104,52 @@ public class Robot extends IterativeRobot {
     		}else{
     			lift.set(0);
     		}
-    	}else{
+    	}else{ //auto pick
     	
-    	if(liftUpperLimit.get() && liftLowerLimit.get()){ //if upper limit not made
-    	if(!toteIn.get() && !fiveTotesIn.get()){
-    		twoInUp = true;
+    	if(liftUpperLimit.get() && liftLowerLimit.get()){ //if overide limit not made
+    		if(!toteIn.get() && !fiveTotesIn.get()){ //if tote in robot and five in hopper pick up 2in
+    		fiveUpToggle = true;
     	
-    	}else if(twoInUp){
+    		}else if(fiveUpToggle){  
     			if(liftEncoder.getDistance() > 100){
-    				twoInUp = false;
+    				fiveUpToggle = false;
     		}
+    			
     			 lift.set(-0.5);
-    	}else{
-       if(!toteIn.get() && !liftUp && !liftDown){//auto load
-    	   liftUp = true; 
-    	   liftDown = false;
-       }else if(liftUp){
-    	   if(liftEncoder.getDistance() > 800){
-    		   liftUp = false;
-    		   liftDown = true;
-    	   }
-    	   lift.set(-0.5);
-       }else if(liftDown){
-    	   if(liftEncoder.getDistance() < 5){
-    		   liftUp = false;
-    		   liftDown = false;
-    	   }
-    	   lift.set(0.5);
+    			 
+    		}else{
+    			if(!toteIn.get() && !liftUp && !liftDown){//auto load up to dogs
+    				liftUp = true; 
+    				liftDown = false;
+    				
+    			}else if(liftUp){ //go up to dogs
+    				if(liftEncoder.getDistance() > 800){
+    					liftUp = false;
+    					liftDown = true;
+    				}
+    				
+    				lift.set(-0.5);
+    				
+    			}else if(liftDown){//go down to start
+    				if(liftEncoder.getDistance() < 5){
+    					liftUp = false;
+    					liftDown = false;
+    				}
+    				
+    				lift.set(0.5);
     	   
-       }else{
-    	   lift.set(0);
-       }
+    			}else{
+    				lift.set(0);
+    			}
        
-    }
-    	}else{ //if upper switch is hit
-    		liftUp = false;
-        	liftDown = false;
-        	twoInUp = false;
+    		}
+    		}else{ //if overide switchs are hit. stop auto load
+    			liftUp = false;
+    			liftDown = false;
+    			fiveUpToggle = false;
+    		}
     	}
-    	}
-       // System.out.println(liftDown);
+        //System.out.println(liftDown);
         //System.out.println(liftLowerLimit.get());
         System.out.println(liftEncoder.getDistance());
         
